@@ -2,12 +2,12 @@
 # 1. GCP Connection Details
 # ----------------------------------------
 variable "project_id" {
-  description = "Your GCP Project ID"
+  description = ai-project-428622
   type        = string
 }
 
 variable "region" {
-  description = "The GCP region for the cluster"
+  description = us-central1
   type        = string
   default     = "us-central1" # Or your preferred region
 }
@@ -16,7 +16,7 @@ variable "region" {
 # 2. GKE Cluster Config
 # ----------------------------------------
 variable "cluster_name" {
-  description = "Name for the GKE cluster"
+  description = "llm-inference-cluster"
   type        = string
   default     = "llm-inference-cluster"
 }
@@ -25,19 +25,19 @@ variable "cluster_name" {
 # 3. GPU Node Pool Config (Crucial for the project)
 # ----------------------------------------
 variable "gpu_type" {
-  description = "The type of NVIDIA GPU to use (e.g., L4, T4)"
+  description = "nvidia-l4"
   type        = string
   default     = "nvidia-l4"
 }
 
 variable "gpu_count" {
-  description = "The number of GPUs per node (usually 1 for L4/T4)"
+  description = 1
   type        = number
   default     = 1
 }
-
+# Initial number of nodes in the GPU pool
 variable "initial_node_count" {
-  description = "The initial number of GPU nodes in the pool"
+  description = 1
   type        = number
   default     = 1
 }
