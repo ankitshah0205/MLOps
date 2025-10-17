@@ -24,8 +24,8 @@ resource "google_container_cluster" "primary" {
   networking_mode = "VPC_NATIVE"
   
   # Auto-repair and auto-upgrade are production best practices
-  node_auto_repair  = true
-  node_auto_upgrade = true
+  #node_auto_repair  = true
+  #node_auto_upgrade = true
 }
 
 # 2. Create the GPU Node Pool (The Accelerator)
@@ -35,10 +35,18 @@ resource "google_container_node_pool" "gpu_node_pool" {
   cluster    = google_container_cluster.primary.name
   node_count = var.initial_node_count
 
+  #EXPLICITLY DEFINE ZONES WHERE THE GPU ACCELERATOR IS AVAILABLE
+  node_locations = [
+    #"${var.region}-a",
+    "${var.region}-b",
+    #"${var.region}-c"
+    # Omitted the failing zone: "${var.region}-f"
+  ]
+
   # Spot VMs for cost savings (Highly recommended for development projects)
   # Set this to true for huge cost reduction on the GPU portion
   node_config {
-    machine_type = "g2-standard-4" # Recommended machine type for L4
+    machine_type = "n1-standard-4" # Recommended machine type for L4
     disk_size_gb = 100
     
     # --- CRITICAL: GPU CONFIGURATION ---
@@ -68,7 +76,9 @@ resource "google_container_node_pool" "gpu_node_pool" {
 
   # Enable cluster autoscaling for production readiness
   autoscaling {
-    max_node_count = 3 
+    max_node_count = 1 
+    # Change to 1 max node count due to GPU quota limitations
+    # max_node_count = 2 
     min_node_count = 0 # Scale down to zero when not in use to save cost!
   }
 }
