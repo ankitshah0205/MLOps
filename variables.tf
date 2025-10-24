@@ -2,12 +2,12 @@
 # 1. GCP Connection Details
 # ----------------------------------------
 variable "project_id" {
-  description = ai-project-428622
+  description = "ai-project-428622"
   type        = string
 }
 
 variable "region" {
-  description = us-central1
+  description = "us-central1"
   type        = string
   default     = "us-central1" # Or your preferred region
 }
@@ -25,9 +25,9 @@ variable "cluster_name" {
 # 3. GPU Node Pool Config (Crucial for the project)
 # ----------------------------------------
 variable "gpu_type" {
-  description = "nvidia-l4"
+  description = "nvidia-t4"
   type        = string
-  default     = "nvidia-l4"
+  default     = "nvidia-tesla-t4"
 }
 
 variable "gpu_count" {

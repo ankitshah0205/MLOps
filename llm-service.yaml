@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mistral-vllm-service
+spec:
+  # Use LoadBalancer to get a publicly accessible IP for testing
+  type: LoadBalancer 
+  selector:
+    app: mistral-vllm-server # Matches the label defined in the Deployment
+  ports:
+    - protocol: TCP
+      port: 80 # External port for the client
+      targetPort: 8000 # Internal port where vLLM serves the API (as defined in the Dockerfile ENTRYPOINT)

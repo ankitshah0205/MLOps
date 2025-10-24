@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mistral-vllm-deployment
+  labels:
+    app: mistral-vllm-server
+spec:
+  # Start with 1 replica for initial testing. 
+  # This should match the number of nodes provisioned by Terraform.
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: mistral-vllm-server
+  template:
+    metadata:
+      labels:
+        app: mistral-vllm-server
+    spec:
+      # --- Node Scheduling ---
+      # This Taint Toleration ensures the Pod can be scheduled on the dedicated
+      # GPU node pool that Terraform tainted with nvidia.com/gpu=present:NoSchedule.
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "present"
+        effect: "NoSchedule"
+
+      # Define a temporary volume for shared memory (critical for vLLM/PyTorch)
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory # Use RAM for speed, essential for vLLM/LLMs
+
+      containers:
+      - name: vllm-inference-server
+        # --- CRITICAL: Replace with your pushed Artifact Registry image path ---
+        image: us-central1-docker.pkg.dev/ai-project-428622/llm-inference-repo/mistral-vllm-server:v1.0-l4
+        
+        # vLLM exposes the OpenAI API on port 8000
+        ports:
+        - containerPort: 8000
+          name: http-api
+          protocol: TCP
+        
+        # --- CRITICAL: GPU Resource Request and Limits ---
+        # This tells Kubernetes to allocate exactly 1 GPU (NVIDIA L4)
+        resources:
+          limits:
+            nvidia.com/gpu: "1" 
+            cpu: "4" # Ensure adequate CPU to manage the GPU operations
+            memory: "32Gi" # Ensure adequate RAM for non-VRAM tasks
+          requests:
+            nvidia.com/gpu: "1"
+            cpu: "2"
+            memory: "4Gi"
+
+        # Mount the shared memory volume
+        volumeMounts:
+        - mountPath: /dev/shm # Standard Linux shared memory location
+          name: dshm
+        
+        # --- Health Checks (MLOps Best Practice) ---
+        # Ensure the model server is ready before sending traffic
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 120 # Give vLLM time to download and load the model (can take a few minutes)
+          periodSeconds: 10
+          timeoutSeconds: 5
